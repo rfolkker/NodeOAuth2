@@ -1,36 +1,27 @@
+var express = require('express'),
+    bodyParser = require('body-parser'),
+    oauthserver = require('oauth2-server');
 
-/**
- * Module dependencies.
- */
+var app = express.createServer();
 
-var express = require('express')
-  , routes = require('./routes');
+app.use(bodyParser.urlencoded({ extended: true }));
 
-var app = module.exports = express.createServer();
+app.use(bodyParser.json());
 
-// Configuration
-
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
+app.oauth = oauthserver({
+    model: {}, // See below for specification 
+    grants: ['password'],
+    debug: true
 });
 
-app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+app.all('/oauth/token', app.oauth.grant());
+
+app.get('/', app.oauth.authorise(), function(req, res) {
+    res.send('Secret area');
 });
 
-app.configure('production', function(){
-  app.use(express.errorHandler());
-});
+app.use(app.oauth.errorHandler());
 
-// Routes
-
-app.get('/', routes.index);
-
-app.listen(3000, function(){
-  console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+app.listen(3000, function() {
+    console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
