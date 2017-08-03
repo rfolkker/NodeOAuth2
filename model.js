@@ -17,13 +17,14 @@
 var pg = require('pg'),
   model = module.exports,
   connString = process.env.DATABASE_URL;
+var pool = new pg.Pool();
 
 /*
  * Required
  */
 
 model.getAccessToken = function (bearerToken, callback) {
-  pg.connect(connString, function (err, client, done) {
+  pool.connect(connString, function (err, client, done) {
     if (err) return callback(err);
     client.query('SELECT access_token, client_id, expires, user_id FROM oauth_access_tokens ' +
         'WHERE access_token = $1', [bearerToken], function (err, result) {
@@ -42,10 +43,11 @@ model.getAccessToken = function (bearerToken, callback) {
       done();
     });
   });
+  pool.end();
 };
 
 model.getClient = function (clientId, clientSecret, callback) {
-  pg.connect(connString, function (err, client, done) {
+  pool.connect(connString, function (err, client, done) {
     if (err) return callback(err);
 
     client.query('SELECT client_id, client_secret, redirect_uri FROM oauth_clients WHERE ' +
@@ -64,10 +66,11 @@ model.getClient = function (clientId, clientSecret, callback) {
       done();
     });
   });
+  pool.end();
 };
 
 model.getRefreshToken = function (bearerToken, callback) {
-  pg.connect(connString, function (err, client, done) {
+  pool.connect(connString, function (err, client, done) {
     if (err) return callback(err);
     client.query('SELECT refresh_token, client_id, expires, user_id FROM oauth_refresh_tokens ' +
         'WHERE refresh_token = $1', [bearerToken], function (err, result) {
@@ -76,6 +79,7 @@ model.getRefreshToken = function (bearerToken, callback) {
       done();
     });
   });
+  pool.end();
 };
 
 // This will very much depend on your setup, I wouldn't advise doing anything exactly like this but
@@ -90,7 +94,7 @@ model.grantTypeAllowed = function (clientId, grantType, callback) {
 };
 
 model.saveAccessToken = function (accessToken, clientId, expires, userId, callback) {
-  pg.connect(connString, function (err, client, done) {
+  pool.connect(connString, function (err, client, done) {
     if (err) return callback(err);
     client.query('INSERT INTO oauth_access_tokens(access_token, client_id, user_id, expires) ' +
         'VALUES ($1, $2, $3, $4)', [accessToken, clientId, userId, expires],
@@ -99,6 +103,7 @@ model.saveAccessToken = function (accessToken, clientId, expires, userId, callba
       done();
     });
   });
+  pool.end();
 };
 
 model.saveRefreshToken = function (refreshToken, clientId, userId, expires, callback) {
@@ -111,13 +116,14 @@ model.saveRefreshToken = function (refreshToken, clientId, userId, expires, call
       done();
     });
   });
+  pool.end();
 };
 
 /*
  * Required to support password grant type
  */
 model.getUser = function (username, password, callback) {
-  pg.connect(connString, function (err, client, done) {
+  pool.connect(connString, function (err, client, done) {
     if (err) return callback(err);
     client.query('SELECT id FROM users WHERE username = $1 AND password = $2', [username,
         password], function (err, result) {
@@ -125,4 +131,5 @@ model.getUser = function (username, password, callback) {
       done();
     });
   });
+  pool.end();
 };
