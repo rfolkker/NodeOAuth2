@@ -16,7 +16,7 @@
 
 var pg = require('pg'),
     model = module.exports,
-    connString = "postgres://postgres:Password@localhost/public";
+    connString = "postgres://postgres:Password@localhost:5432/OAuth";
 // connString = process.env.DATABASE_URL;
 var pool = new pg.Pool();
 
@@ -25,31 +25,31 @@ var pool = new pg.Pool();
  */
 
 model.getAccessToken = function(bearerToken, callback) {
-    pool.connect(connString, function(err, client, done) {
-        if (err) return callback(err);
-        client.query('SELECT access_token, client_id, expires, user_id FROM oauth_access_tokens ' +
-            'WHERE access_token = $1', [bearerToken],
-            function(err, result) {
-                if (err || !result.rowCount) return callback(err);
-                // This object will be exposed in req.oauth.token
-                // The user_id field will be exposed in req.user (req.user = { id: "..." }) however if
-                // an explicit user object is included (token.user, must include id) it will be exposed
-                // in req.user instead
-                var token = result.rows[0];
-                callback(null, {
-                    accessToken: token.access_token,
-                    clientId: token.client_id,
-                    expires: token.expires,
-                    userId: token.userId
-                });
-                done();
+    pool.username = "postgres";
+    pool.password = "Password";
+    client = pool.connect(connString);
+    client.query('SELECT access_token, client_id, expires, user_id FROM oauth_access_tokens ' +
+        'WHERE access_token = $1', [bearerToken],
+        function(err, result) {
+            if (err || !result.rowCount) return callback(err);
+            // This object will be exposed in req.oauth.token
+            // The user_id field will be exposed in req.user (req.user = { id: "..." }) however if
+            // an explicit user object is included (token.user, must include id) it will be exposed
+            // in req.user instead
+            var token = result.rows[0];
+            callback(null, {
+                accessToken: token.access_token,
+                clientId: token.client_id,
+                expires: token.expires,
+                userId: token.userId
             });
-    });
+            done();
+        });
     pool.end();
 };
 
 model.getClient = function(clientId, clientSecret, callback) {
-    pool.connect(connString, function(err, client, done) {
+    pool.connect(function(err, client, done) {
         if (err) return callback(err);
 
         client.query('SELECT client_id, client_secret, redirect_uri FROM oauth_clients WHERE ' +
