@@ -28,7 +28,7 @@ model.getAccessToken = function(bearerToken, callback) {
     callback(null, {
         accessToken: "token.access_token",
         clientId: 12345,
-        expires: Date.now(),
+        expires: new Date(2018, 31, 8, 0, 0, 0, 0),
         userId: "RoyFolkker"
     });
 };
