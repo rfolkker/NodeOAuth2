@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "express": "2.5.8",
+        "express": "2.5.11",
         "body-parser": "^1.17.2",
         "oauth2-server": "^2.4.1",
         "pg": "^6.1.0"
